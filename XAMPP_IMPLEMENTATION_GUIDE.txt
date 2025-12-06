@@ -1,0 +1,216 @@
+================================================================================
+XAMPP IMPLEMENTATION GUIDE - AIRLINE MANAGEMENT SYSTEM
+================================================================================
+
+STEP 1: INSTALL XAMPP
+================================================================================
+1. Download XAMPP from: https://www.apachefriends.org/
+2. Install XAMPP (default location: C:\xampp)
+3. Run XAMPP Control Panel as Administrator
+4. Start Apache and MySQL services
+
+STEP 2: CREATE DATABASE IN phpMyAdmin
+================================================================================
+1. Open your browser and go to: http://localhost/phpmyadmin
+2. Click on "New" in the left sidebar
+3. Enter database name: airline_management
+4. Select Collation: utf8_general_ci
+5. Click "Create"
+
+STEP 3: EXECUTE DATABASE SCHEMA
+================================================================================
+1. In phpMyAdmin, select the "airline_management" database
+2. Click on the "SQL" tab at the top
+3. Open the file: database_schema.sql
+4. Copy all the content
+5. Paste it into the SQL query box
+6. Click "Go" to execute
+7. You should see success messages for all tables created
+
+STEP 4: INSERT SAMPLE DATA
+================================================================================
+1. Still in the "SQL" tab
+2. Open the file: sample_data.sql
+3. Copy all the content
+4. Paste it into the SQL query box
+5. Click "Go" to execute
+6. Verify data by clicking on table names in the left sidebar
+
+STEP 5: CREATE STORED PROCEDURES, VIEWS, AND TRIGGERS
+================================================================================
+1. In the "SQL" tab
+2. Open the file: sql_queries.sql
+3. Copy the sections for:
+   - Views (CREATE OR REPLACE VIEW...)
+   - Stored Procedures (CREATE PROCEDURE...)
+   - Triggers (CREATE TRIGGER...)
+4. Execute each section separately
+5. Verify:
+   - Views: Check "Views" section in left sidebar
+   - Procedures: Go to "Routines" tab
+   - Triggers: Go to "Triggers" tab
+
+STEP 6: SETUP PROJECT FOLDER
+================================================================================
+1. Navigate to: C:\xampp\htdocs\
+2. Create a new folder: airline
+3. Copy all PHP files to this folder:
+   - config.php
+   - index.html
+   - register_passenger.php
+   - book_ticket.php
+   - cancel_booking.php
+   - admin_login.php
+   - manage_flights.php
+   - logout.php
+   - view_bookings.php
+
+STEP 7: CONFIGURE DATABASE CONNECTION
+================================================================================
+1. Open config.php in a text editor
+2. Verify the database credentials:
+   - DB_HOST: 'localhost'
+   - DB_USER: 'root'
+   - DB_PASS: '' (empty by default in XAMPP)
+   - DB_NAME: 'airline_management'
+3. Save the file
+
+STEP 8: TEST THE APPLICATION
+================================================================================
+1. Open browser and go to: http://localhost/airline/
+2. You should see the homepage with 4 cards
+3. Test each module:
+   
+   a) Register Passenger:
+      - Click "Register" button
+      - Fill in passenger details
+      - Submit and note the Passenger ID
+   
+   b) Book Ticket:
+      - Click "Book Now"
+      - Select a passenger from dropdown
+      - Select a flight
+      - Enter seat number (e.g., 12A)
+      - Submit booking
+   
+   c) View Bookings:
+      - Click "View Bookings"
+      - See all bookings with details
+      - Try cancelling a booking
+   
+   d) Admin Panel:
+      - Click "Admin Login"
+      - Username: admin
+      - Password: admin123
+      - Add new flights
+      - View all flights
+      - Delete flights
+
+STEP 9: VERIFY DATABASE OPERATIONS
+================================================================================
+1. Go back to phpMyAdmin
+2. Check the tables:
+   - passengers: Should have new entries
+   - bookings: Should show confirmed bookings
+   - tickets: Should have ticket records
+   - flights: Available seats should decrease after booking
+3. Test triggers:
+   - Book a ticket → Check if available_seats decreased
+   - Cancel a booking → Check if available_seats increased
+
+================================================================================
+COMMON XAMPP ISSUES & SOLUTIONS
+================================================================================
+
+ISSUE 1: Apache Port 80 Already in Use
+SOLUTION:
+- Open XAMPP Control Panel
+- Click "Config" next to Apache
+- Select "httpd.conf"
+- Find "Listen 80" and change to "Listen 8080"
+- Save and restart Apache
+- Access via: http://localhost:8080/airline/
+
+ISSUE 2: MySQL Port 3306 Already in Use
+SOLUTION:
+- Stop other MySQL services (Windows Services)
+- Or change MySQL port in XAMPP config
+- Update config.php with new port
+
+ISSUE 3: "Access Denied" Error
+SOLUTION:
+- Check database credentials in config.php
+- Ensure MySQL is running in XAMPP
+- Try resetting MySQL root password
+
+ISSUE 4: Stored Procedures Not Working
+SOLUTION:
+- Execute procedures one at a time
+- Check for DELIMITER issues
+- Use phpMyAdmin's "Routines" tab to create manually
+
+ISSUE 5: PHP Files Downloading Instead of Executing
+SOLUTION:
+- Ensure Apache is running
+- Check if PHP module is loaded
+- Verify files are in htdocs folder
+- Clear browser cache
+
+ISSUE 6: "Call to undefined function mysqli_connect()"
+SOLUTION:
+- Open php.ini (XAMPP Control → Apache Config → php.ini)
+- Find ";extension=mysqli"
+- Remove the semicolon: "extension=mysqli"
+- Save and restart Apache
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+✓ Database created successfully
+✓ All tables created (9 tables)
+✓ Sample data inserted
+✓ Views created (2 views)
+✓ Stored procedures created (2 procedures)
+✓ Triggers created (3 triggers)
+✓ Homepage loads correctly
+✓ Passenger registration works
+✓ Flight booking works
+✓ Booking cancellation works
+✓ Admin login works
+✓ Flight management works
+✓ Seat count updates automatically
+✓ Tickets generated correctly
+
+================================================================================
+FOLDER STRUCTURE
+================================================================================
+C:\xampp\htdocs\airline\
+├── index.html
+├── config.php
+├── register_passenger.php
+├── book_ticket.php
+├── cancel_booking.php
+├── view_bookings.php
+├── admin_login.php
+├── manage_flights.php
+├── logout.php
+├── database_schema.sql
+├── sample_data.sql
+├── sql_queries.sql
+└── PROJECT_DOCUMENTATION.txt
+
+================================================================================
+SECURITY NOTES FOR PRODUCTION
+================================================================================
+1. Change default admin password
+2. Use password_hash() instead of MD5
+3. Implement prepared statements to prevent SQL injection
+4. Add HTTPS/SSL certificate
+5. Enable error logging instead of displaying errors
+6. Implement session timeout
+7. Add CSRF protection
+8. Validate and sanitize all inputs
+9. Implement rate limiting
+10. Regular database backups
+
+================================================================================

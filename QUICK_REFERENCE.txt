@@ -1,0 +1,281 @@
+================================================================================
+AIRLINE MANAGEMENT SYSTEM - QUICK REFERENCE CARD
+================================================================================
+
+DATABASE CREDENTIALS
+================================================================================
+Host: localhost
+Username: root
+Password: (empty)
+Database: airline_management
+
+ADMIN CREDENTIALS
+================================================================================
+Username: admin
+Password: admin123
+
+APPLICATION URL
+================================================================================
+Homepage: http://localhost/airline/
+phpMyAdmin: http://localhost/phpmyadmin
+
+FILE LOCATIONS
+================================================================================
+Project Files: C:\xampp\htdocs\airline\
+Database Backup: COMPLETE_DATABASE.sql
+Documentation: PROJECT_DOCUMENTATION.txt
+Setup Guide: XAMPP_IMPLEMENTATION_GUIDE.txt
+
+TABLES (9)
+================================================================================
+1. aircraft          - Aircraft fleet (8 records)
+2. airports          - Airport details (10 records)
+3. passengers        - Passenger info (10 records)
+4. flights           - Flight schedules (10 records)
+5. bookings          - Booking records (13 records)
+6. tickets           - Ticket details (13 records)
+7. staff             - Staff members (8 records)
+8. staff_assignments - Staff-flight mapping (17 records)
+9. admins            - Admin users (2 records)
+
+VIEWS (2)
+================================================================================
+1. daily_flight_schedule - Daily flight information
+2. airport_operations    - Airport statistics
+
+STORED PROCEDURES (2)
+================================================================================
+1. book_ticket(passenger_id, flight_id, seat_number)
+   - Books ticket and updates seats
+   
+2. cancel_booking(booking_id)
+   - Cancels booking and restores seats
+
+TRIGGERS (3)
+================================================================================
+1. after_booking_insert  - Reduces seats after booking
+2. update_flight_status  - Auto-updates flight status
+3. after_booking_cancel  - Restores seats on cancellation
+
+PHP FILES (8)
+================================================================================
+1. config.php              - Database connection
+2. index.html              - Homepage
+3. register_passenger.php  - Passenger registration
+4. book_ticket.php         - Ticket booking
+5. cancel_booking.php      - View/cancel bookings
+6. admin_login.php         - Admin authentication
+7. manage_flights.php      - Flight management
+8. logout.php              - Session logout
+
+KEY RELATIONSHIPS
+================================================================================
+aircraft (1) -----> (N) flights
+airports (1) -----> (N) flights [departure]
+airports (1) -----> (N) flights [arrival]
+passengers (1) ---> (N) bookings
+flights (1) ------> (N) bookings
+bookings (1) -----> (1) tickets
+staff (N) <-------> (N) flights [via staff_assignments]
+
+CONSTRAINTS USED
+================================================================================
+✓ PRIMARY KEY      - All tables
+✓ FOREIGN KEY      - 8 relationships
+✓ UNIQUE           - email, passport, flight_number, ticket_number
+✓ CHECK            - price > 0, seats >= 0, times validation
+✓ NOT NULL         - All mandatory fields
+✓ DEFAULT          - Timestamps, status fields
+✓ ENUM             - Status, role fields
+✓ AUTO_INCREMENT   - All primary keys
+
+SAMPLE QUERIES
+================================================================================
+
+-- List upcoming flights
+SELECT * FROM daily_flight_schedule 
+WHERE flight_date >= CURDATE();
+
+-- Find passenger bookings
+SELECT p.first_name, p.last_name, f.flight_number, b.seat_number
+FROM passengers p
+JOIN bookings b ON p.passenger_id = b.passenger_id
+JOIN flights f ON b.flight_id = f.flight_id
+WHERE p.passenger_id = 1;
+
+-- Airport statistics
+SELECT * FROM airport_operations 
+ORDER BY total_flights DESC;
+
+-- Book a ticket (stored procedure)
+CALL book_ticket(1, 2, '15A');
+
+-- Cancel booking (stored procedure)
+CALL cancel_booking(5);
+
+-- Revenue by flight
+SELECT f.flight_number, COUNT(b.booking_id) AS bookings, 
+       SUM(t.price) AS revenue
+FROM flights f
+LEFT JOIN bookings b ON f.flight_id = b.flight_id
+LEFT JOIN tickets t ON b.booking_id = t.booking_id
+WHERE b.booking_status = 'Confirmed'
+GROUP BY f.flight_id;
+
+COMMON COMMANDS
+================================================================================
+
+-- Start XAMPP services
+Open XAMPP Control Panel → Start Apache & MySQL
+
+-- Access phpMyAdmin
+http://localhost/phpmyadmin
+
+-- Import database
+phpMyAdmin → Import → Choose COMPLETE_DATABASE.sql → Go
+
+-- Check tables
+USE airline_management;
+SHOW TABLES;
+
+-- View table structure
+DESCRIBE flights;
+
+-- Check procedures
+SHOW PROCEDURE STATUS WHERE Db = 'airline_management';
+
+-- Check triggers
+SHOW TRIGGERS FROM airline_management;
+
+-- View all views
+SHOW FULL TABLES WHERE Table_type = 'VIEW';
+
+TESTING CHECKLIST
+================================================================================
+□ Database created successfully
+□ All 9 tables exist
+□ Sample data loaded
+□ Views working
+□ Stored procedures created
+□ Triggers active
+□ Homepage loads
+□ Passenger registration works
+□ Ticket booking works
+□ Booking cancellation works
+□ Admin login successful
+□ Flight management functional
+□ Seats update automatically
+
+TROUBLESHOOTING
+================================================================================
+
+Problem: Apache won't start
+Solution: Change port 80 to 8080 in httpd.conf
+
+Problem: MySQL won't start
+Solution: Check if another MySQL service is running
+
+Problem: Connection failed
+Solution: Verify credentials in config.php
+
+Problem: Stored procedure error
+Solution: Execute procedures one at a time with correct DELIMITER
+
+Problem: PHP files download instead of execute
+Solution: Ensure Apache is running and files are in htdocs
+
+Problem: Trigger not firing
+Solution: Check trigger syntax and table names
+
+NORMALIZATION QUICK CHECK
+================================================================================
+1NF: ✓ All attributes atomic (no multi-valued attributes)
+2NF: ✓ No partial dependencies (all depend on full PK)
+3NF: ✓ No transitive dependencies (no non-key → non-key)
+
+ACID PROPERTIES
+================================================================================
+A - Atomicity:    All or nothing (booking transaction)
+C - Consistency:  Constraints maintained (seats >= 0)
+I - Isolation:    Concurrent transactions isolated
+D - Durability:   Committed data persists
+
+JOIN TYPES
+================================================================================
+INNER JOIN: Only matching records
+LEFT JOIN:  All from left + matching from right
+RIGHT JOIN: All from right + matching from left
+CROSS JOIN: Cartesian product
+
+AGGREGATE FUNCTIONS
+================================================================================
+COUNT()  - Count rows
+SUM()    - Total of values
+AVG()    - Average value
+MAX()    - Maximum value
+MIN()    - Minimum value
+
+GROUP BY: Groups rows for aggregation
+HAVING:   Filters groups (use after GROUP BY)
+WHERE:    Filters rows (use before GROUP BY)
+
+KEY FEATURES
+================================================================================
+✓ Real-time seat availability
+✓ Automatic ticket generation
+✓ Booking cancellation with seat restoration
+✓ Admin authentication
+✓ Input validation
+✓ SQL injection prevention
+✓ Session management
+✓ Responsive UI design
+✓ Error handling
+✓ Transaction management
+
+FUTURE ENHANCEMENTS
+================================================================================
+• Payment gateway integration
+• Email/SMS notifications
+• Mobile app
+• Seat map visualization
+• Real-time flight tracking
+• Multi-language support
+• Analytics dashboard
+• API development
+• Loyalty program
+• Travel insurance
+
+IMPORTANT NOTES
+================================================================================
+⚠ This is a demonstration project
+⚠ Use bcrypt instead of MD5 in production
+⚠ Implement prepared statements for security
+⚠ Add HTTPS/SSL for production
+⚠ Regular database backups recommended
+⚠ Test all features before viva
+⚠ Understand the code, don't just memorize
+
+VIVA PREPARATION
+================================================================================
+✓ Explain ER diagram
+✓ Describe normalization
+✓ Demonstrate booking process
+✓ Show trigger effects
+✓ Execute stored procedures
+✓ Explain ACID properties
+✓ Discuss constraints
+✓ Show JOIN queries
+✓ Explain views
+✓ Suggest improvements
+
+CONTACT & SUPPORT
+================================================================================
+Documentation: PROJECT_DOCUMENTATION.txt
+Setup Guide: XAMPP_IMPLEMENTATION_GUIDE.txt
+Viva Guide: VIVA_PREPARATION.txt
+SQL Queries: sql_queries.sql
+Complete DB: COMPLETE_DATABASE.sql
+
+================================================================================
+GOOD LUCK WITH YOUR PROJECT!
+================================================================================

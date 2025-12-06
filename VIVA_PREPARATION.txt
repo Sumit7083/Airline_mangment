@@ -1,0 +1,309 @@
+================================================================================
+VIVA PREPARATION GUIDE - AIRLINE MANAGEMENT SYSTEM
+================================================================================
+
+QUICK PROJECT SUMMARY
+================================================================================
+Project: Airline Management System
+Database: MySQL (airline_management)
+Tables: 9 (aircraft, airports, flights, passengers, bookings, tickets, staff, staff_assignments, admins)
+Views: 2 (daily_flight_schedule, airport_operations)
+Stored Procedures: 2 (book_ticket, cancel_booking)
+Triggers: 3 (seat management, status updates)
+PHP Files: 8 (CRUD operations)
+Technology Stack: PHP + MySQL + Apache (XAMPP)
+
+================================================================================
+EXPECTED VIVA QUESTIONS & ANSWERS
+================================================================================
+
+Q1: What is the purpose of your project?
+A: The Airline Management System automates airline operations including flight scheduling, 
+passenger registration, ticket booking, and staff management. It provides a centralized 
+database for efficient data management and real-time seat availability tracking.
+
+Q2: How many tables are in your database and why?
+A: 9 tables. Each represents a distinct entity:
+- aircraft, airports: Master data
+- flights: Core operational data
+- passengers: Customer information
+- bookings, tickets: Transaction data
+- staff, staff_assignments: Employee management
+- admins: System access control
+This follows normalization principles to avoid redundancy.
+
+Q3: Explain the relationship between bookings and tickets.
+A: One-to-one relationship. Each booking generates exactly one ticket. This is enforced 
+by a UNIQUE constraint on booking_id in the tickets table. The relationship is mandatory 
+(booking_id is NOT NULL) and uses CASCADE delete to maintain referential integrity.
+
+Q4: What is normalization and what normal form is your database in?
+A: Normalization is the process of organizing data to reduce redundancy. My database is 
+in Third Normal Form (3NF):
+- 1NF: All attributes contain atomic values
+- 2NF: No partial dependencies (all non-key attributes depend on entire primary key)
+- 3NF: No transitive dependencies (non-key attributes don't depend on other non-key attributes)
+
+Q5: Why did you use triggers instead of handling seat updates in PHP?
+A: Triggers ensure data consistency at the database level, regardless of which application 
+accesses the database. Benefits:
+- Automatic execution (no manual intervention)
+- Centralized business logic
+- Prevents inconsistencies from multiple access points
+- Enforces rules even if PHP code is bypassed
+
+Q6: Explain the book_ticket stored procedure.
+A: The procedure performs atomic booking operations:
+1. Checks available seats for the flight
+2. If seats available:
+   - Creates booking record
+   - Generates unique ticket with auto-generated ticket number
+   - Decrements available seats
+   - Returns success message with booking ID
+3. If no seats: Returns error message
+This ensures all-or-nothing transaction behavior.
+
+Q7: How do you prevent double booking of the same seat?
+A: Using a UNIQUE constraint on (flight_id, seat_number) combination in the bookings table. 
+If someone tries to book an already-booked seat, MySQL will reject the INSERT with a 
+duplicate key error. This is enforced at database level, not application level.
+
+Q8: What are the different types of constraints you used?
+A: 
+- PRIMARY KEY: Unique identifier for each record
+- FOREIGN KEY: Maintains referential integrity between tables
+- UNIQUE: Prevents duplicate values (email, passport, seat combinations)
+- CHECK: Enforces business rules (price > 0, seats >= 0, arrival > departure)
+- NOT NULL: Ensures mandatory fields are filled
+- DEFAULT: Sets default values (timestamps, status fields)
+- ENUM: Restricts values to predefined list (status, role)
+
+Q9: Explain ACID properties with examples from your project.
+A:
+- Atomicity: Booking transaction either completes fully (booking + ticket + seat update) 
+  or fails completely. No partial bookings.
+- Consistency: Constraints ensure data validity (can't book negative seats, price must be positive)
+- Isolation: Concurrent bookings for last seat are handled sequentially by database locks
+- Durability: Once booking is confirmed, it persists even if system crashes
+
+Q10: What is the difference between DELETE CASCADE and DELETE RESTRICT?
+A:
+- CASCADE: When parent record is deleted, child records are automatically deleted
+  Example: Deleting a booking automatically deletes its ticket
+- RESTRICT: Prevents deletion of parent if child records exist
+  Example: Cannot delete an aircraft that has scheduled flights
+Used CASCADE for bookings/tickets (dependent data) and RESTRICT for aircraft/airports (master data).
+
+Q11: Why use stored procedures instead of writing all logic in PHP?
+A:
+- Performance: Compiled and stored in database, faster execution
+- Security: Users can execute procedures without direct table access
+- Reusability: Can be called from multiple applications (PHP, Java, Python)
+- Centralized logic: Business rules in one place
+- Network efficiency: Reduces data transfer between app and database
+
+Q12: Explain the three triggers in your system.
+A:
+1. after_booking_insert: Automatically reduces available_seats when a confirmed booking is created
+2. update_flight_status: Changes flight status from Scheduled→Departed→Arrived based on time
+3. after_booking_cancel: Restores available_seats when booking status changes to Cancelled
+
+Q13: What are views and why did you create them?
+A: Views are virtual tables based on SELECT queries. Benefits:
+- Simplify complex queries (daily_flight_schedule joins 3 tables)
+- Data abstraction (hide complex joins from users)
+- Security (restrict access to specific columns)
+- Reusability (query once, use multiple times)
+Created views for daily schedule and airport statistics.
+
+Q14: How do you handle concurrent bookings for the last seat?
+A: MySQL's transaction isolation and row-level locking handle this:
+1. First transaction locks the flight row
+2. Checks available_seats
+3. If > 0, creates booking and decrements seats
+4. Releases lock
+5. Second transaction then sees 0 seats and fails
+The stored procedure ensures atomic check-and-book operation.
+
+Q15: What is the difference between INNER JOIN and LEFT JOIN?
+A:
+- INNER JOIN: Returns only matching records from both tables
+  Example: Show only flights that have bookings
+- LEFT JOIN: Returns all records from left table + matching from right
+  Example: Show all flights including those with zero bookings
+Used INNER JOIN for confirmed data, LEFT JOIN for optional relationships.
+
+Q16: Explain foreign key ON DELETE actions.
+A:
+- CASCADE: Delete child records when parent is deleted (bookings→tickets)
+- RESTRICT: Prevent parent deletion if children exist (aircraft→flights)
+- SET NULL: Set foreign key to NULL when parent deleted (not used in this project)
+- NO ACTION: Similar to RESTRICT (default behavior)
+
+Q17: How did you implement security in your system?
+A:
+- Admin authentication with session management
+- Password hashing using MD5 (should use bcrypt in production)
+- Input sanitization (mysqli_real_escape_string)
+- SQL injection prevention through sanitization
+- Session-based access control for admin pages
+- Email and phone validation
+
+Q18: What is the purpose of the staff_assignments table?
+A: It implements a many-to-many relationship between staff and flights. One staff member 
+can be assigned to multiple flights, and one flight can have multiple staff members. 
+This junction table stores the assignment relationships with a unique constraint to 
+prevent duplicate assignments.
+
+Q19: How would you add a refund feature?
+A: Create a refunds table:
+- refund_id (PK)
+- booking_id (FK to bookings)
+- refund_amount
+- refund_date
+- refund_status (Pending/Processed/Rejected)
+- reason
+Add a trigger to update booking_status to 'Refunded' and restore seats.
+
+Q20: What indexes would you add to improve performance?
+A:
+- Primary keys are automatically indexed
+- Add index on flights.departure_time (frequent filtering)
+- Add index on passengers.email (login/search)
+- Add index on bookings.passenger_id (foreign key lookups)
+- Add composite index on (flight_id, booking_status) for booking queries
+
+================================================================================
+KEY CONCEPTS TO EXPLAIN
+================================================================================
+
+1. ENTITY-RELATIONSHIP MODEL
+- Entities: Real-world objects (Flight, Passenger, Booking)
+- Attributes: Properties of entities (flight_number, passenger_name)
+- Relationships: Associations between entities (Passenger books Flight)
+- Cardinality: One-to-one, one-to-many, many-to-many
+
+2. NORMALIZATION BENEFITS
+- Eliminates data redundancy
+- Reduces storage space
+- Maintains data integrity
+- Easier to update data
+- Prevents anomalies (insertion, deletion, update)
+
+3. TRANSACTION MANAGEMENT
+- BEGIN TRANSACTION: Start transaction
+- COMMIT: Save changes permanently
+- ROLLBACK: Undo changes if error occurs
+- Used implicitly in stored procedures
+
+4. INDEXING
+- B-Tree indexes for primary keys
+- Speeds up SELECT queries
+- Slows down INSERT/UPDATE (index maintenance)
+- Trade-off between read and write performance
+
+5. DATA INTEGRITY
+- Entity integrity: Primary key uniqueness
+- Referential integrity: Foreign key constraints
+- Domain integrity: CHECK constraints, data types
+- User-defined integrity: Triggers, stored procedures
+
+================================================================================
+DEMONSTRATION FLOW FOR VIVA
+================================================================================
+
+1. SHOW DATABASE STRUCTURE
+   - Open phpMyAdmin
+   - Show all 9 tables
+   - Explain relationships using Structure view
+   - Show Views and Routines tabs
+
+2. DEMONSTRATE BOOKING PROCESS
+   - Open application homepage
+   - Register a new passenger
+   - Book a ticket
+   - Show in phpMyAdmin:
+     * New booking record
+     * Generated ticket
+     * Decreased available_seats (trigger effect)
+
+3. DEMONSTRATE CANCELLATION
+   - Cancel the booking
+   - Show in phpMyAdmin:
+     * Updated booking_status
+     * Increased available_seats (trigger effect)
+
+4. SHOW ADMIN FEATURES
+   - Login as admin
+   - Add a new flight
+   - Show flight management interface
+   - Delete a flight
+
+5. RUN SQL QUERIES
+   - Execute sample queries from sql_queries.sql
+   - Explain JOIN operations
+   - Show subquery results
+   - Display view data
+
+6. EXPLAIN STORED PROCEDURE
+   - Show procedure code in phpMyAdmin
+   - Execute manually: CALL book_ticket(1, 2, '15A');
+   - Explain each step of execution
+
+7. DEMONSTRATE TRIGGERS
+   - Show trigger code
+   - Explain when they fire
+   - Show before/after data for trigger execution
+
+================================================================================
+COMMON MISTAKES TO AVOID
+================================================================================
+
+❌ Don't say "I used AI to generate code"
+✅ Say "I designed the schema based on requirements and implemented it"
+
+❌ Don't memorize code line-by-line
+✅ Understand the logic and explain in your own words
+
+❌ Don't say "I don't know" immediately
+✅ Try to relate to concepts you know, then admit if unsure
+
+❌ Don't argue with examiner
+✅ Accept feedback and show willingness to learn
+
+❌ Don't rush through explanations
+✅ Speak clearly and explain step-by-step
+
+================================================================================
+TECHNICAL TERMS TO KNOW
+================================================================================
+
+- Schema: Structure of database (tables, columns, relationships)
+- Tuple: A single row in a table
+- Attribute: A column in a table
+- Cardinality: Number of rows in a table
+- Degree: Number of columns in a table
+- Candidate Key: Minimal set of attributes that uniquely identify a tuple
+- Super Key: Set of attributes that uniquely identify a tuple
+- Composite Key: Primary key made of multiple columns
+- Surrogate Key: Artificial key (auto-increment ID)
+- Natural Key: Key from real-world data (passport_number)
+
+================================================================================
+FINAL TIPS
+================================================================================
+
+1. Practice explaining the ER diagram
+2. Be ready to write queries on paper
+3. Know the difference between WHERE and HAVING
+4. Understand GROUP BY and aggregate functions
+5. Be confident about your design decisions
+6. Prepare to suggest improvements
+7. Know limitations of your current implementation
+8. Be honest if you don't know something
+9. Show enthusiasm about database concepts
+10. Relate project to real-world airline systems
+
+================================================================================
+GOOD LUCK WITH YOUR VIVA!
+================================================================================

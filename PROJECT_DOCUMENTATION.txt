@@ -1,0 +1,484 @@
+================================================================================
+AIRLINE MANAGEMENT SYSTEM - DATABASE SYSTEMS MINI PROJECT
+================================================================================
+
+1. PROJECT DESCRIPTION & OBJECTIVES
+================================================================================
+
+PROJECT ABSTRACT:
+The Airline Management System is a comprehensive database application designed to 
+streamline airline operations including flight scheduling, passenger management, 
+ticket booking, and staff coordination. The system provides efficient data 
+management for airlines to handle day-to-day operations.
+
+PURPOSE:
+- Automate airline booking and management processes
+- Maintain centralized database for flights, passengers, and bookings
+- Enable efficient query and reporting capabilities
+- Provide secure admin and staff access control
+
+MODULES INVOLVED:
+1. Aircraft Management - Manage aircraft fleet details
+2. Airport Management - Store airport information
+3. Flight Management - Schedule and track flights
+4. Passenger Management - Register and manage passenger data
+5. Booking Management - Handle ticket reservations
+6. Ticket Management - Generate and track tickets
+7. Staff Management - Manage airline staff assignments
+8. Admin Management - System administration and control
+
+KEY FEATURES:
+- Real-time flight availability checking
+- Automated seat management
+- Passenger booking history
+- Staff assignment to flights
+- Multi-airport operations support
+- Ticket generation and cancellation
+- Flight status tracking
+- Revenue and booking analytics
+
+GOALS:
+- Reduce manual booking errors
+- Improve operational efficiency
+- Provide quick access to flight information
+- Enable data-driven decision making
+- Ensure data integrity and consistency
+- Support scalable airline operations
+
+================================================================================
+2. ER DIAGRAM (TEXT FORMAT)
+================================================================================
+
+ENTITIES AND ATTRIBUTES:
+
+1. AIRCRAFT
+   - aircraft_id (PK)
+   - model
+   - manufacturer
+   - total_seats
+   - status
+
+2. AIRPORTS
+   - airport_id (PK)
+   - airport_code
+   - airport_name
+   - city
+   - country
+
+3. FLIGHTS
+   - flight_id (PK)
+   - flight_number
+   - aircraft_id (FK -> AIRCRAFT)
+   - departure_airport_id (FK -> AIRPORTS)
+   - arrival_airport_id (FK -> AIRPORTS)
+   - departure_time
+   - arrival_time
+   - available_seats
+   - price
+   - status
+
+4. PASSENGERS
+   - passenger_id (PK)
+   - first_name
+   - last_name
+   - email
+   - phone
+   - passport_number
+   - date_of_birth
+   - nationality
+
+5. BOOKINGS
+   - booking_id (PK)
+   - passenger_id (FK -> PASSENGERS)
+   - flight_id (FK -> FLIGHTS)
+   - booking_date
+   - seat_number
+   - booking_status
+
+6. TICKETS
+   - ticket_id (PK)
+   - booking_id (FK -> BOOKINGS)
+   - ticket_number
+   - issue_date
+   - price
+
+7. STAFF
+   - staff_id (PK)
+   - first_name
+   - last_name
+   - role
+   - email
+   - phone
+   - hire_date
+
+8. ADMINS
+   - admin_id (PK)
+   - username
+   - password
+   - email
+   - created_at
+
+RELATIONSHIPS:
+
+1. AIRCRAFT to FLIGHTS (1:N)
+   - One aircraft can be assigned to multiple flights
+   - Cardinality: 1 Aircraft -> Many Flights
+
+2. AIRPORTS to FLIGHTS (1:N) - Departure
+   - One airport can have multiple departing flights
+   - Cardinality: 1 Airport -> Many Flights
+
+3. AIRPORTS to FLIGHTS (1:N) - Arrival
+   - One airport can have multiple arriving flights
+   - Cardinality: 1 Airport -> Many Flights
+
+4. PASSENGERS to BOOKINGS (1:N)
+   - One passenger can make multiple bookings
+   - Cardinality: 1 Passenger -> Many Bookings
+
+5. FLIGHTS to BOOKINGS (1:N)
+   - One flight can have multiple bookings
+   - Cardinality: 1 Flight -> Many Bookings
+
+6. BOOKINGS to TICKETS (1:1)
+   - Each booking generates one ticket
+   - Cardinality: 1 Booking -> 1 Ticket
+
+7. STAFF to FLIGHTS (M:N) - Can be extended with assignment table
+   - Multiple staff members can be assigned to multiple flights
+
+================================================================================
+
+================================================================================
+3. DATABASE SCHEMA DETAILS
+================================================================================
+
+All database schema is available in: database_schema.sql
+
+KEY CONSTRAINTS IMPLEMENTED:
+
+1. PRIMARY KEYS:
+   - Auto-incrementing IDs for all tables
+   - Ensures unique identification of records
+
+2. FOREIGN KEYS:
+   - flights.aircraft_id → aircraft.aircraft_id
+   - flights.departure_airport_id → airports.airport_id
+   - flights.arrival_airport_id → airports.airport_id
+   - bookings.passenger_id → passengers.passenger_id
+   - bookings.flight_id → flights.flight_id
+   - tickets.booking_id → bookings.booking_id
+   - staff_assignments.staff_id → staff.staff_id
+   - staff_assignments.flight_id → flights.flight_id
+
+3. UNIQUE CONSTRAINTS:
+   - airports.airport_code
+   - passengers.email
+   - passengers.passport_number
+   - flights.flight_number
+   - tickets.ticket_number
+   - staff.email
+   - admins.username
+   - admins.email
+   - bookings: (flight_id, seat_number) combination
+
+4. CHECK CONSTRAINTS:
+   - aircraft.total_seats > 0
+   - flights.available_seats >= 0
+   - flights.price > 0
+   - flights.departure_airport_id != arrival_airport_id
+   - flights.arrival_time > departure_time
+   - tickets.price > 0
+
+5. ENUM CONSTRAINTS:
+   - aircraft.status: 'Active', 'Maintenance', 'Retired'
+   - flights.status: 'Scheduled', 'Boarding', 'Departed', 'Arrived', 'Cancelled', 'Delayed'
+   - bookings.booking_status: 'Confirmed', 'Cancelled', 'Pending'
+   - staff.role: 'Pilot', 'Co-Pilot', 'Flight Attendant', 'Ground Staff', 'Engineer'
+
+6. DEFAULT VALUES:
+   - Timestamps: CURRENT_TIMESTAMP
+   - Status fields: Default to active/scheduled states
+
+7. CASCADE RULES:
+   - ON DELETE CASCADE: bookings, tickets, staff_assignments
+   - ON DELETE RESTRICT: flights (cannot delete aircraft/airports with active flights)
+
+================================================================================
+4. SQL QUERIES EXPLANATION
+================================================================================
+
+All queries are available in: sql_queries.sql
+
+GENERAL QUERIES (5):
+1. List upcoming flights - Shows all scheduled future flights with route details
+2. Fully booked flights - Identifies flights with zero available seats
+3. Passenger ticket details - Complete booking information for specific passenger
+4. Aircraft availability - Shows active aircraft and their scheduled flights
+5. Passenger count per flight - Aggregates confirmed bookings per flight
+
+JOIN QUERIES (3):
+6. Passenger + Ticket + Flight - Complete booking details with 4-table join
+7. Staff assignments - Shows crew assigned to each flight
+8. Aircraft schedule - Links aircraft with their flight schedules
+
+SUBQUERIES (2):
+9. Most booked route - Uses nested subquery to find highest booking count
+10. Top 5 frequent passengers - Ranks passengers by booking frequency and spending
+
+VIEWS (2):
+- daily_flight_schedule: Formatted daily flight information
+- airport_operations: Statistics for each airport (departures/arrivals)
+
+STORED PROCEDURES (2):
+- book_ticket(): Handles complete booking process with seat validation
+- cancel_booking(): Cancels booking and restores available seats
+
+TRIGGERS (3):
+- after_booking_insert: Automatically reduces available seats
+- update_flight_status: Auto-updates flight status based on time
+- after_booking_cancel: Restores seats when booking is cancelled
+
+================================================================================
+5. PHP MODULES EXPLANATION
+================================================================================
+
+1. config.php
+   - Database connection configuration
+   - Helper functions for input sanitization
+   - Email and phone validation functions
+
+2. index.html
+   - Homepage with navigation cards
+   - Responsive design with gradient background
+   - Links to all major modules
+
+3. register_passenger.php
+   - Passenger registration form
+   - Input validation (email, phone, passport)
+   - Duplicate checking for email and passport
+   - Success/error message display
+
+4. book_ticket.php
+   - Flight search and selection
+   - Passenger selection from existing records
+   - Seat number input
+   - Calls book_ticket() stored procedure
+   - Real-time seat availability display
+
+5. cancel_booking.php (also view_bookings.php)
+   - Displays all bookings in tabular format
+   - Shows passenger, flight, and ticket details
+   - Cancel button for confirmed bookings
+   - Calls cancel_booking() stored procedure
+   - Color-coded booking status
+
+6. admin_login.php
+   - Secure admin authentication
+   - Session management
+   - MD5 password hashing (demo - use bcrypt in production)
+   - Redirect logic for logged-in users
+
+7. manage_flights.php
+   - Admin-only access (session check)
+   - Add new flights with validation
+   - View all flights in table format
+   - Delete flights functionality
+   - Dropdown population for aircraft and airports
+
+8. logout.php
+   - Session destruction
+   - Redirect to login page
+
+================================================================================
+6. ERROR HANDLING IMPLEMENTED
+================================================================================
+
+1. DATABASE CONNECTION ERRORS:
+   - mysqli_connect_error() check in config.php
+   - Die with error message if connection fails
+
+2. FORM VALIDATION:
+   - Empty field checking
+   - Email format validation using filter_var()
+   - Phone number regex validation
+   - Date validation
+
+3. SQL ERRORS:
+   - mysqli_error() display for debugging
+   - Duplicate entry handling
+   - Foreign key constraint violations
+
+4. AUTHENTICATION ERRORS:
+   - Invalid login credentials
+   - Session timeout handling
+   - Unauthorized access prevention
+
+5. BUSINESS LOGIC ERRORS:
+   - Seat already booked validation
+   - No seats available checking
+   - Booking cancellation validation
+   - Same airport departure/arrival prevention
+
+6. USER FEEDBACK:
+   - Success messages (green background)
+   - Error messages (red background)
+   - Informational messages (blue background)
+
+================================================================================
+7. SAMPLE DATA OVERVIEW
+================================================================================
+
+Available in: sample_data.sql
+
+- 8 Aircraft (Boeing, Airbus, Embraer models)
+- 10 Airports (Indian and International)
+- 10 Passengers (with realistic Indian names)
+- 10 Flights (domestic and international routes)
+- 13 Bookings (including one cancelled)
+- 13 Tickets (auto-generated ticket numbers)
+- 8 Staff members (pilots, co-pilots, attendants)
+- 2 Admin accounts (admin/admin123, manager/manager123)
+
+================================================================================
+8. FUTURE SCOPE & ENHANCEMENTS
+================================================================================
+
+1. TECHNICAL ENHANCEMENTS:
+   - Implement REST API for mobile app integration
+   - Add real-time flight tracking
+   - Integrate payment gateway
+   - Email/SMS notifications for bookings
+   - QR code generation for tickets
+   - Seat map visualization
+   - Multi-language support
+
+2. FEATURE ADDITIONS:
+   - Loyalty program and rewards
+   - Meal and baggage preferences
+   - Travel insurance integration
+   - Group booking functionality
+   - Connecting flights support
+   - Dynamic pricing based on demand
+   - Weather integration for delays
+
+3. ANALYTICS & REPORTING:
+   - Revenue reports by route
+   - Occupancy rate analysis
+   - Customer behavior analytics
+   - Staff performance metrics
+   - Predictive maintenance for aircraft
+   - Demand forecasting
+
+4. SECURITY IMPROVEMENTS:
+   - Two-factor authentication
+   - Role-based access control (RBAC)
+   - Audit logging
+   - Data encryption
+   - GDPR compliance
+   - Regular security audits
+
+5. USER EXPERIENCE:
+   - Mobile-responsive design
+   - Progressive Web App (PWA)
+   - Chatbot for customer support
+   - Social media integration
+   - Review and rating system
+   - Personalized recommendations
+
+================================================================================
+9. VIVA PREPARATION POINTS
+================================================================================
+
+KEY CONCEPTS TO EXPLAIN:
+
+1. NORMALIZATION:
+   - Database is in 3NF (Third Normal Form)
+   - No transitive dependencies
+   - Minimal data redundancy
+
+2. ACID PROPERTIES:
+   - Atomicity: Booking transaction is all-or-nothing
+   - Consistency: Constraints maintain data integrity
+   - Isolation: Concurrent bookings handled properly
+   - Durability: Committed transactions are permanent
+
+3. INDEXING:
+   - Primary keys automatically indexed
+   - Foreign keys should be indexed for JOIN performance
+   - Consider indexing on frequently searched columns (email, flight_number)
+
+4. TRANSACTIONS:
+   - Booking process uses implicit transactions
+   - Stored procedures ensure atomic operations
+   - Rollback on errors
+
+5. TRIGGERS VS STORED PROCEDURES:
+   - Triggers: Automatic, event-driven (after INSERT/UPDATE)
+   - Procedures: Manual invocation, can have parameters
+   - Both used for business logic enforcement
+
+6. JOINS:
+   - INNER JOIN: Only matching records
+   - LEFT JOIN: All from left table + matching from right
+   - Used extensively for combining flight, passenger, booking data
+
+7. SUBQUERIES:
+   - Nested SELECT statements
+   - Used for complex filtering and aggregation
+   - Can be correlated or non-correlated
+
+8. VIEWS:
+   - Virtual tables
+   - Simplify complex queries
+   - Provide data abstraction layer
+
+EXPECTED VIVA QUESTIONS:
+
+Q1: Why did you use triggers for seat management?
+A: Triggers ensure automatic seat count updates whenever a booking is made or cancelled, maintaining data consistency without manual intervention.
+
+Q2: Explain the relationship between bookings and tickets.
+A: One-to-one relationship. Each booking generates exactly one ticket, enforced by UNIQUE constraint on booking_id in tickets table.
+
+Q3: How do you prevent double booking of the same seat?
+A: UNIQUE constraint on (flight_id, seat_number) combination in bookings table prevents duplicate seat assignments.
+
+Q4: What happens if you try to delete an aircraft that has scheduled flights?
+A: The DELETE operation fails due to FOREIGN KEY constraint with RESTRICT action, preventing orphaned flight records.
+
+Q5: How would you implement a refund system?
+A: Add a refunds table with booking_id FK, refund_amount, refund_date, and status. Update booking_status to 'Refunded'.
+
+Q6: Explain the use of CHECK constraints in your schema.
+A: CHECK constraints enforce business rules at database level (e.g., price > 0, seats >= 0, arrival_time > departure_time).
+
+Q7: Why use stored procedures instead of handling everything in PHP?
+A: Stored procedures provide better performance, reusability, security, and centralized business logic that can be called from multiple applications.
+
+Q8: How do you handle concurrent bookings for the last available seat?
+A: Database-level locking and transaction isolation ensure only one booking succeeds. The stored procedure checks availability within the transaction.
+
+================================================================================
+10. PROJECT DELIVERABLES CHECKLIST
+================================================================================
+
+✓ Complete SQL Schema (database_schema.sql)
+✓ Sample Data (sample_data.sql)
+✓ All SQL Queries (sql_queries.sql)
+✓ PHP CRUD Operations (8 PHP files)
+✓ Database Connection (config.php)
+✓ Homepage (index.html)
+✓ XAMPP Implementation Guide
+✓ Complete Documentation
+✓ ER Diagram (Text Format)
+✓ Views (2)
+✓ Stored Procedures (2)
+✓ Triggers (3)
+✓ Error Handling
+✓ Admin Panel
+✓ User Interface
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
